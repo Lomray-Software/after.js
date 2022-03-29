@@ -19,10 +19,10 @@ export async function loadInitialProps(
     // https://github.com/ReactTraining/react-router/blob/master/packages/react-router/modules/Router.js#L12
     // we get around this problem by adding { path: "*" }
     // to route that don't have path property
-    const match = matchPath(pathname, { ...route, path: route.path || '*' });
+    const match = matchPath(pathname, route.path || '*');
 
-    if (match && route.component && isAsyncComponent(route.component)) {
-      const component = route.component;
+    if (match && route.element && isAsyncComponent(route.element)) {
+      const component = route.element;
 
       if (ssg) {
         const PAGE_DATA_FILE_PATH = `${

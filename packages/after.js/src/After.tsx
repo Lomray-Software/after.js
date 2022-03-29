@@ -1,24 +1,22 @@
 import * as React from 'react';
-import { WithRouterStatics, Omit, WithRouterProps } from 'react-router';
-import {
-  Switch,
-  Route,
-  withRouter,
-  Redirect,
-  RouteComponentProps,
-} from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Location } from 'history';
 import { loadInitialProps } from './loadInitialProps';
+import withRouter, {
+  RouteComponentProps,
+  WithRouterStatics,
+} from './withRouter';
 import {
   AsyncRouteProps,
   ServerAppState,
   InitialData,
   TransitionBehavior,
   CtxBase,
+  AsyncRouteableComponent,
 } from './types';
 import { get404Component, getAllRoutes, isInstantTransition } from './utils';
 
-export interface AfterpartyProps extends RouteComponentProps<any> {
+export interface AfterpartyProps extends RouteComponentProps {
   data: ServerAppState;
   routes: AsyncRouteProps[];
   transitionBehavior: TransitionBehavior;
@@ -40,9 +38,9 @@ class Afterparty extends React.Component<AfterpartyProps, AfterpartyState> {
   };
 
   prefetcherCache: object = {};
-  NotfoundComponent:
-    | React.ComponentType<RouteComponentProps<any>>
-    | React.ComponentType<any> = get404Component(this.props.routes);
+  NotfoundComponent: AsyncRouteableComponent = get404Component(
+    this.props.routes
+  );
 
   static defaultProps = {
     transitionBehavior: 'blocking' as TransitionBehavior,
@@ -72,14 +70,12 @@ class Afterparty extends React.Component<AfterpartyProps, AfterpartyState> {
     if (navigated) {
       const {
         location,
-        history,
+        navigate,
         routes,
         data,
         transitionBehavior,
         // we don't want to pass these
         // to loadInitialProps()
-        match,
-        staticContext,
         children,
         ...rest
       } = this.props;
@@ -90,7 +86,7 @@ class Afterparty extends React.Component<AfterpartyProps, AfterpartyState> {
 
       const ctx: CtxBase = {
         location,
-        history,
+        navigate,
         scrollToTop,
         ...rest,
       };
@@ -136,7 +132,7 @@ class Afterparty extends React.Component<AfterpartyProps, AfterpartyState> {
       pathname,
       this.props.routes,
       {
-        history: this.props.history,
+        navigate: this.props.navigate,
       },
       ssg
     )
@@ -157,43 +153,37 @@ class Afterparty extends React.Component<AfterpartyProps, AfterpartyState> {
     const instantMode = isInstantTransition(transitionBehavior);
 
     // when we are in the instant mode we want to pass the right location prop
-    // to the <Route /> otherwise it will render previous matche component
+    // to the <Route /> otherwise it will render previous match component
     const location = instantMode
       ? currentLocation
       : previousLocation || currentLocation;
 
     return (
-      <Switch location={location}>
+      <Routes location={location}>
         {initialData?.statusCode === 404 && (
-          <Route component={this.NotfoundComponent} path={location.pathname} />
+          <Route element={this.NotfoundComponent} path={location.pathname} />
         )}
-        {initialData?.redirectTo && <Redirect to={initialData.redirectTo} />}
-        {getAllRoutes(this.props.routes).map((r, i) => (
+        {initialData?.redirectTo && <Navigate to={initialData.redirectTo} />}
+        {getAllRoutes(this.props.routes).map(({ path, element }) => (
           <Route
-            key={`route--${i}`}
-            path={r.path}
-            exact={r.exact}
-            render={props =>
-              React.createElement(r.component, {
-                ...initialData,
-                history: props.history,
-                match: props.match,
-                prefetch: this.prefetch,
-                location,
-                isLoading,
-              })
-            }
+            key={`route--${path}`}
+            path={path}
+            element={React.createElement(element as React.FC, {
+              ...initialData,
+              prefetch: this.prefetch,
+              location,
+              isLoading,
+            })}
           />
         ))}
-      </Switch>
+      </Routes>
     );
   }
 }
 
 type TAfterparty = React.ComponentClass<AfterpartyProps>;
 type TAfter = React.ComponentClass<
-  Omit<AfterpartyProps, keyof RouteComponentProps<any>> &
-    WithRouterProps<TAfterparty>
+  Omit<AfterpartyProps, keyof RouteComponentProps>
 > &
   WithRouterStatics<TAfterparty>;
 

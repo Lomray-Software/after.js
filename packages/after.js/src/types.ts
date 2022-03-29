@@ -1,31 +1,32 @@
+import React from 'react';
 import {
   RouteProps,
-  RouteComponentProps,
-  match as Match,
+  PathMatch,
+  NavigateFunction,
+  Location,
 } from 'react-router-dom';
 import { HelmetData } from 'react-helmet';
 import { Request, Response } from 'express';
-import { History, Location } from 'history';
 import { Document as DefaultDoc } from './Document';
 
 export interface CtxBase {
   req?: Request;
   res?: Response;
-  history?: History;
+  navigate?: NavigateFunction;
   location?: Location;
   scrollToTop?: ScrollToTop;
 }
 
-export interface Ctx<P> extends CtxBase {
-  match: Match<P>;
+export interface Ctx extends CtxBase {
+  match: PathMatch;
 }
 
-export interface CtxStatic<D = Record<string, any>, P = any> extends Ctx<P> {
+export interface CtxStatic<D = Record<string, any>> extends Ctx {
   data: D | null;
 }
 
 export interface AsyncComponent {
-  getInitialProps: (props: Ctx<any>) => any;
+  getInitialProps: (props: Ctx) => any;
   getStaticInitialProps: (props: CtxStatic) => any;
   load?: () => Promise<React.ReactNode>;
   getChunkName: () => string | undefined;
@@ -43,12 +44,10 @@ export type AsyncRouteComponentType<Props> = React.ComponentType<Props> &
  * }
  */
 export type AsyncRouteableComponent<Props = any> =
-  // re-exported from react-router (RouteComponentProps)
-  | React.ComponentType<RouteComponentProps<Props>>
   | React.ComponentType<Props>
   // After.js Page Component (getInitialProps and ...)
-  | AsyncRouteComponentType<RouteComponentProps<Props>>
-  | AsyncRouteComponentType<Props>;
+  | AsyncRouteComponentType<Props>
+  | NonNullable<RouteProps['element']>;
 
 export interface AsyncRouteComponentState {
   Component: AsyncRouteableComponent | null;
@@ -56,7 +55,7 @@ export interface AsyncRouteComponentState {
 
 export interface AsyncRouteProps<Props = any> extends RouteProps {
   Placeholder?: React.ComponentType<any>;
-  component: AsyncRouteableComponent<Props>;
+  element: AsyncRouteableComponent<Props>;
   redirectTo?: string;
 }
 
@@ -138,7 +137,7 @@ export interface DocumentgetInitialProps<T = RenderPageResult> {
   assets: Assets;
   data: ServerAppState;
   renderPage: () => Promise<T>;
-  match: Match | null;
+  match: PathMatch | null;
   scripts: string[];
   styles: string[];
   scrollToTop: ScrollToTop;

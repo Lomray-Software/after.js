@@ -40,10 +40,10 @@ export default function({ types: t }) {
         // if there was no import statement just return
         if (asyncComponentImportNames.length === 0) return;
 
-        // check for "component" in object properties and function call in value { component: hello() }
+        // check for "component" in object properties and function call in value { element: hello() }
         const component = path.node.properties.find(
           property =>
-            t.isIdentifier(property.key, { name: 'component' }) &&
+            t.isIdentifier(property.key, { name: 'element' }) &&
             t.isCallExpression(property.value)
         );
 

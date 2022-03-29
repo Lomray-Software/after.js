@@ -9,14 +9,14 @@ export function getAssets({ route, chunks }: GetAssetsParams) {
   let scripts: string[] = [];
   let styles: string[] = [];
 
-  // if route.component is not an asyncComponent
+  // if route.element is not an asyncComponent
   // it's assets (JS and CSS files) will go into the
   // main bundle.js and bundle.css ...
-  if (!route || !isLoadableComponent(route.component)) {
+  if (!route || !isLoadableComponent(route.element)) {
     return { scripts, styles };
   }
 
-  const chunkName = route.component.getChunkName();
+  const chunkName = route.element.getChunkName();
 
   // if component was LoadableComponent and chunkName was undefined
   // print an error message to console so Developer can fix it

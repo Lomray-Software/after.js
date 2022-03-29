@@ -1,7 +1,8 @@
 import * as React from 'react';
 import * as ReactDOMServer from 'react-dom/server';
 import { Helmet } from 'react-helmet';
-import { matchPath, StaticRouter, RouteProps } from 'react-router-dom';
+import { matchPath } from 'react-router-dom';
+import { StaticRouter } from 'react-router-dom/server';
 import { Document as DefaultDoc, __AfterContext } from './Document';
 import { After } from './After';
 import { loadInitialProps } from './loadInitialProps';
@@ -18,8 +19,8 @@ import {
   DocumentProps,
   RenderPageResult,
 } from './types';
-import { StaticRouterContext } from 'react-router';
 import { getAssets } from './getAssets';
+import StaticContext, { IStaticContext } from './staticContext';
 
 const modPageFn = function<Props>(Page: React.ComponentType<Props>) {
   return function RenderAfter(props: Props) {
@@ -74,7 +75,7 @@ export async function renderApp<T>(
   // <StaticRouter /> context object, which get mutated by React Router
   // and it contains information about statusCode and target <Redirect /> component target url (if any)
   // https://github.com/ReactTraining/react-router/blob/master/packages/react-router/docs/api/StaticRouter.md#context-object
-  const context: StaticRouterContext = {};
+  const context: IStaticContext = {};
 
   // here we will check result of the getInitialProps
   // and see if it contains redirectTo or statusCode properties
@@ -122,9 +123,11 @@ export async function renderApp<T>(
     });
     const renderer = customRenderer || defaultRenderer;
     const asyncOrSyncRender = renderer(
-      <StaticRouter location={req.url} context={context}>
-        {fn(After)({ routes, data, transitionBehavior: 'blocking' })}
-      </StaticRouter>
+      <StaticContext.Provider value={context}>
+        <StaticRouter location={req.url}>
+          {fn(After)({ routes, data, transitionBehavior: 'blocking' })}
+        </StaticRouter>
+      </StaticContext.Provider>
     );
 
     const renderedContent = await asyncOrSyncRender;
@@ -138,7 +141,7 @@ export async function renderApp<T>(
   // get css and javascript file paths for the async componetns
   const { scripts, styles } = getAssets({ route: match, chunks });
 
-  const reactRouterMatch = matchPath(req.url, match as RouteProps);
+  const reactRouterMatch = matchPath(req.url, match?.path || '*');
 
   // Docuement.getInitialProps() will call renderPage()
   // and renderPage() will call ReactDOMServer.renderToString

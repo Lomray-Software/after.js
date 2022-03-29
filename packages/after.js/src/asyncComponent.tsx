@@ -43,7 +43,7 @@ export function asyncComponent<Props>({
       return chunkName;
     }
 
-    static getInitialProps(ctx: Ctx<any>) {
+    static getInitialProps(ctx: Ctx) {
       // Need to call the wrapped components getInitialProps if it exists
       if (Component !== null) {
         return Component.getInitialProps
