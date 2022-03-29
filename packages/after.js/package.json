@@ -24,6 +24,11 @@
     "react-router-dom": ">=5.0.0",
     "serialize-javascript": ">=3.0.0"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
   "name": "@lomray/after",
   "private": false,
   "description": "Build isomorphic Javascript applications with ease.",
