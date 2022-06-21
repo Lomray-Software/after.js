@@ -20,8 +20,13 @@ export interface Ctx<P> extends CtxBase {
   match: Match<P>;
 }
 
+export interface CtxStatic<D = Record<string, any>, P = any> extends Ctx<P> {
+  data: D | null;
+}
+
 export interface AsyncComponent {
   getInitialProps: (props: Ctx<any>) => any;
+  getStaticInitialProps: (props: CtxStatic) => any;
   load?: () => Promise<React.ReactNode>;
   getChunkName: () => string | undefined;
 }
