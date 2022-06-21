@@ -1,5 +1,5 @@
 {
-  "version": "3.2.0",
+  "version": "3.2.1",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -29,7 +29,7 @@
       "pre-commit": "tsdx lint"
     }
   },
-  "name": "@jaredpalmer/after",
+  "name": "@lomray/after",
   "private": false,
   "description": "Build isomorphic Javascript applications with ease.",
   "repository": "jaredpalmer/after.js",

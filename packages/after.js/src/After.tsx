@@ -18,7 +18,8 @@ import {
 } from './types';
 import { get404Component, getAllRoutes, isInstantTransition } from './utils';
 
-export interface AfterpartyProps extends RouteComponentProps<any> {
+export interface AfterpartyProps
+  extends RouteComponentProps<any, any, { silent?: boolean }> {
   data: ServerAppState;
   routes: AsyncRouteProps[];
   transitionBehavior: TransitionBehavior;
@@ -56,7 +57,7 @@ class Afterparty extends React.Component<AfterpartyProps, AfterpartyState> {
     const previousLocation = state.currentLocation;
 
     const navigated = currentLocation !== previousLocation;
-    if (navigated) {
+    if (navigated && !props.location.state?.silent) {
       return {
         previousLocation: state.previousLocation || previousLocation,
         currentLocation,
