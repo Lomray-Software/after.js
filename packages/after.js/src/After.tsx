@@ -54,7 +54,7 @@ class Afterparty extends React.Component<AfterpartyProps, AfterpartyState> {
     const previousLocation = state.currentLocation;
 
     const navigated = currentLocation !== previousLocation;
-    if (navigated) {
+    if (navigated && !props.location.state?.silent) {
       return {
         previousLocation: state.previousLocation || previousLocation,
         currentLocation,
