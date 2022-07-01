@@ -6,8 +6,8 @@ import {
 } from 'react-router-dom';
 import React from 'react';
 
-export interface RouteComponentProps {
-  location: Location;
+export interface RouteComponentProps<TLocation = unknown> {
+  location: Location & { state: TLocation };
   navigate: NavigateFunction;
 }
 

@@ -16,7 +16,8 @@ import {
 } from './types';
 import { get404Component, getAllRoutes, isInstantTransition } from './utils';
 
-export interface AfterpartyProps extends RouteComponentProps {
+export interface AfterpartyProps
+  extends RouteComponentProps<{ silent?: boolean }> {
   data: ServerAppState;
   routes: AsyncRouteProps[];
   transitionBehavior: TransitionBehavior;
