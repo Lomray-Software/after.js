@@ -28,6 +28,8 @@ export function asyncComponent<Props>({
     Props,
     AsyncRouteComponentState
   > {
+    static displayName = `AsyncRoute(unknown)`;
+
     /**
      * Static so that you can call load against an uninstantiated version of
      * this component. This should only be called one time outside of the
@@ -36,6 +38,8 @@ export function asyncComponent<Props>({
     static load() {
       return loader().then(ResolvedComponent => {
         Component = ResolvedComponent.default || ResolvedComponent;
+
+        this.displayName = `AsyncRoute(${Component?.displayName ?? Component?.name})`;
       });
     }
 
@@ -71,7 +75,7 @@ export function asyncComponent<Props>({
 
     updateState = () => {
       // Only update state if we don't already have a reference to the
-      // component, this prevent unnecessary renders.
+      // component, this prevents unnecessary renders.
       if (this.state.Component !== Component) {
         this.setState({
           Component,

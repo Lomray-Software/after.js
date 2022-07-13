@@ -1,26 +1,20 @@
-'use strict';
+"use strict";
 
-Object.defineProperty(exports, '__esModule', {
-  value: true,
+Object.defineProperty(exports, "__esModule", {
+  value: true
 });
-exports.getImportArgPath = getImportArgPath;
+exports.addChunkNameToNode = addChunkNameToNode;
 exports.existingMagicCommentChunkName = existingMagicCommentChunkName;
-exports.trimChunkNameBaseDir = trimChunkNameBaseDir;
+exports.getAsyncComponentParamter = getAsyncComponentParamter;
+exports.getImportArgPath = getImportArgPath;
 exports.getMagicCommentChunkName = getMagicCommentChunkName;
 exports.getMagicWebpackComments = getMagicWebpackComments;
-exports.addChunkNameToNode = addChunkNameToNode;
-exports.getAsyncComponentParamter = getAsyncComponentParamter;
+exports.trimChunkNameBaseDir = trimChunkNameBaseDir;
 exports.validMagicStrings = void 0;
 // these helper methods re-exported from faceyspacey/babel-plugin-universal-import
 // https://github.com/faceyspacey/babel-plugin-universal-import/blob/master/index.js
-var validMagicStrings = [
-  'webpackMode', // 'webpackMagicChunkName' gets dealt with current implementation & naming/renaming strategy
-  'webpackInclude',
-  'webpackExclude',
-  'webpackIgnore',
-  'webpackPreload',
-  'webpackPrefetch',
-];
+var validMagicStrings = ['webpackMode', // 'webpackMagicChunkName' gets dealt with current implementation & naming/renaming strategy
+'webpackInclude', 'webpackExclude', 'webpackIgnore', 'webpackPreload', 'webpackPrefetch'];
 exports.validMagicStrings = validMagicStrings;
 
 function getImportArgPath(p) {
@@ -30,16 +24,9 @@ function getImportArgPath(p) {
 function existingMagicCommentChunkName(importArgNode) {
   var leadingComments = importArgNode.leadingComments;
 
-  if (
-    leadingComments &&
-    leadingComments.length &&
-    leadingComments[0].value.indexOf('webpackChunkName') !== -1
-  ) {
+  if (leadingComments && leadingComments.length && leadingComments[0].value.indexOf('webpackChunkName') !== -1) {
     try {
-      return leadingComments[0].value
-        .split('webpackChunkName:')[1]
-        .replace(/["']/g, '')
-        .trim();
+      return leadingComments[0].value.split('webpackChunkName:')[1].replace(/["']/g, '').trim();
     } catch (e) {
       return null;
     }
@@ -54,7 +41,7 @@ function trimChunkNameBaseDir(baseDir) {
 
 function getMagicCommentChunkName(importArgNode) {
   var quasis = importArgNode.quasis,
-    expressions = importArgNode.expressions;
+      expressions = importArgNode.expressions;
   if (!quasis) return trimChunkNameBaseDir(importArgNode.value);
   var baseDir = quasis[0].value.cooked;
   var hasExpressions = expressions.length > 0;
@@ -67,17 +54,16 @@ function getMagicWebpackComments(importArgNode) {
   var results = [];
 
   if (leadingComments && leadingComments.length) {
-    leadingComments.forEach(function(comment) {
+    leadingComments.forEach(function (comment) {
       try {
-        var validMagicString = validMagicStrings.filter(function(str) {
-          return new RegExp(''.concat(str, '\\w*:')).test(comment.value);
+        var validMagicString = validMagicStrings.filter(function (str) {
+          return new RegExp("".concat(str, "\\w*:")).test(comment.value);
         }); // keep this comment if we found a match
 
         if (validMagicString && validMagicString.length === 1) {
           results.push(comment);
         }
-      } catch (e) {
-        // eat the error, but don't give up
+      } catch (e) {// eat the error, but don't give up
       }
     });
   }
@@ -89,15 +75,15 @@ function addChunkNameToNode(argPath, chunkName) {
   var otherValidMagicComments = getMagicWebpackComments(argPath.node);
   delete argPath.node.leadingComments;
   argPath.addComment('leading', " webpackChunkName: '".concat(chunkName, "' "));
-  otherValidMagicComments.forEach(function(validLeadingComment) {
+  otherValidMagicComments.forEach(function (validLeadingComment) {
     return argPath.addComment('leading', validLeadingComment.value);
   });
 }
 
 function getAsyncComponentParamter(loaderArguments, name, t) {
-  var index = loaderArguments.findIndex(function(property) {
+  var index = loaderArguments.findIndex(function (property) {
     return t.isIdentifier(property.node.key, {
-      name: name,
+      name: name
     });
   });
   return [index, index === -1 ? null : loaderArguments[index].node.value.value];

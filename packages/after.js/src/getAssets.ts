@@ -1,4 +1,4 @@
-import { GetAssetsParams } from './types';
+import type { GetAssetsParams } from './types';
 import { isLoadableComponent } from './utils';
 // @ts-ignore
 import logger from 'razzle-dev-utils/logger';

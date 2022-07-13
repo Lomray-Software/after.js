@@ -1,5 +1,5 @@
 {
-  "version": "3.2.1",
+  "version": "4.0.0",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -83,6 +83,7 @@
     "typescript": "^4.4.4"
   },
   "dependencies": {
-    "babel-plugin-after": "^3.2.0"
+    "@lomray/babel-plugin-after": "^4.0.0",
+    "@lomray/event-manager": "^1.0.0"
   }
 }

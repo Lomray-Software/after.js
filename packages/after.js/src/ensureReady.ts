@@ -1,8 +1,8 @@
-import { matchPath, RouteMatch } from 'react-router-dom';
+import { matchRoutes } from 'react-router-dom';
 import { AsyncRouteProps, ServerAppState } from './types';
 import { isLoadableComponent } from './utils';
 
-type EnsureReadyResult = ServerAppState & { match?: RouteMatch };
+type EnsureReadyResult = ServerAppState;
 
 /**
  * This helps us to make sure all the async code is loaded before rendering.
@@ -12,26 +12,23 @@ export async function ensureReady(
   pathname?: string
 ): Promise<EnsureReadyResult> {
   const location = pathname || window.location.pathname;
-  let matchedRoute;
+  const matchedRoutes = matchRoutes(routes, location);
 
-  await Promise.all(
-    routes.map(route => {
-      const match = matchPath(location, route.path || '*');
+  const promises = matchedRoutes?.map((match) => {
+    const { route: { element } } = match;
 
-      if (match && route && route.element) {
-        matchedRoute = match;
+    if (!element || !isLoadableComponent(element)) {
+      return;
+    }
 
-        if (isLoadableComponent(route.element) && route.element.load) {
-          return route.element.load();
-        }
-      }
+    return element.load?.();
+  });
 
-      return undefined;
-    })
-  );
+  if (promises) {
+    await Promise.all(promises);
+  }
 
   return {
     ...((window as any).__SERVER_APP_STATE__ as ServerAppState),
-    match: matchedRoute,
   };
 }

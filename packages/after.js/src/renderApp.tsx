@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as ReactDOMServer from 'react-dom/server';
 import { Helmet } from 'react-helmet';
-import { matchPath } from 'react-router-dom';
 import { StaticRouter } from 'react-router-dom/server';
 import { Document as DefaultDoc, __AfterContext } from './Document';
 import { After } from './After';
@@ -17,10 +16,9 @@ import {
   ServerAppState,
   RenderResult,
   DocumentProps,
-  RenderPageResult,
 } from './types';
 import { getAssets } from './getAssets';
-import StaticContext, { IStaticContext } from './staticContext';
+import { IStaticContext } from './staticContext';
 
 const modPageFn = function<Props>(Page: React.ComponentType<Props>) {
   return function RenderAfter(props: Props) {
@@ -75,7 +73,9 @@ export async function renderApp<T>(
   // <StaticRouter /> context object, which get mutated by React Router
   // and it contains information about statusCode and target <Redirect /> component target url (if any)
   // https://github.com/ReactTraining/react-router/blob/master/packages/react-router/docs/api/StaticRouter.md#context-object
-  const context: IStaticContext = {};
+  const context: IStaticContext = {
+    isServer: true,
+  };
 
   // here we will check result of the getInitialProps
   // and see if it contains redirectTo or statusCode properties
@@ -87,7 +87,7 @@ export async function renderApp<T>(
       context.statusCode = statusCode;
     }
 
-    // if we got redirectTo from getInitalProps
+    // if we got redirectTo from getInitialProps
     // we don't waste server resources by rendering the react tree
     // so we return early
     if (redirectTo) {
@@ -100,7 +100,7 @@ export async function renderApp<T>(
     }
   }
 
-  // this object containes data that <After /> will use on client-side
+  // this object contains data that <After /> will use on client-side
   const afterData: AfterClientData = {
     scrollToTop: autoScrollRef,
   };
@@ -123,11 +123,9 @@ export async function renderApp<T>(
     });
     const renderer = customRenderer || defaultRenderer;
     const asyncOrSyncRender = renderer(
-      <StaticContext.Provider value={context}>
-        <StaticRouter location={req.url}>
-          {fn(After)({ routes, data, transitionBehavior: 'blocking' })}
-        </StaticRouter>
-      </StaticContext.Provider>
+      <StaticRouter location={req.url}>
+        {fn(After)({ routes, data, staticContext: context, transitionBehavior: 'blocking' })}
+      </StaticRouter>
     );
 
     const renderedContent = await asyncOrSyncRender;
@@ -138,12 +136,10 @@ export async function renderApp<T>(
 
   const Doc = Document || DefaultDoc;
 
-  // get css and javascript file paths for the async componetns
-  const { scripts, styles } = getAssets({ route: match, chunks });
+  // get css and javascript file paths for the async components
+  const { scripts, styles } = getAssets({ route: match?.route, chunks });
 
-  const reactRouterMatch = matchPath(req.url, match?.path || '*');
-
-  // Docuement.getInitialProps() will call renderPage()
+  // Document.getInitialProps() will call renderPage()
   // and renderPage() will call ReactDOMServer.renderToString
   // so we get our React Tree html from this function
   const { html, ...docProps } = await Doc.getInitialProps({
@@ -153,7 +149,7 @@ export async function renderApp<T>(
     renderPage,
     data,
     helmet: Helmet.renderStatic(),
-    match: reactRouterMatch,
+    match,
     scripts,
     styles,
     scrollToTop: autoScrollRef,
@@ -161,7 +157,7 @@ export async function renderApp<T>(
   });
 
   // if we got a <Redirect /> in during render of the react tree
-  // we redirect the user and we don't waste server resources
+  // we redirect the user, and we don't waste server resources
   if (context.url) {
     return {
       html: '',
@@ -171,18 +167,18 @@ export async function renderApp<T>(
     };
   }
 
-  const props: DocumentProps<RenderPageResult> = {
+  const props: DocumentProps = {
     assets,
     data,
     scripts,
     styles,
-    match: reactRouterMatch,
+    match,
     ...rest,
     ...docProps,
     html,
   };
 
-  // we render <Docuemnt /> which is our app shell
+  // we render <Document /> which is our app shell
   const doc = ReactDOMServer.renderToStaticMarkup(
     <__AfterContext.Provider value={props}>
       <Doc {...props} />

@@ -1,9 +1,10 @@
 import React from 'react';
-import {
+import type {
   RouteProps,
-  PathMatch,
   NavigateFunction,
   Location,
+  RouteMatch,
+  RouteObject,
 } from 'react-router-dom';
 import { HelmetData } from 'react-helmet';
 import { Request, Response } from 'express';
@@ -18,7 +19,7 @@ export interface CtxBase {
 }
 
 export interface Ctx extends CtxBase {
-  match: PathMatch;
+  match: RouteMatch;
 }
 
 export interface CtxStatic<D = Record<string, any>> extends Ctx {
@@ -53,11 +54,15 @@ export interface AsyncRouteComponentState {
   Component: AsyncRouteableComponent | null;
 }
 
-export interface AsyncRouteProps<Props = any> extends RouteProps {
-  Placeholder?: React.ComponentType<any>;
+export interface AsyncRouteProps<Props = any> extends RouteObject {
   element: AsyncRouteableComponent<Props>;
-  redirectTo?: string;
+  children?: AsyncRouteProps[];
 }
+
+export type IRouteProps<TInitialData = any> = {
+  prefetch: (pathname: string) => void;
+  location: Location;
+} & TInitialData;
 
 export type ScrollToTop = React.RefObject<boolean>;
 
@@ -69,8 +74,12 @@ export interface ServerAppState {
   initialData: InitialData;
 }
 
+export interface AsyncMatchPath extends RouteMatch {
+  route: AsyncRouteProps;
+}
+
 export interface InitialProps {
-  match?: AsyncRouteProps;
+  match: AsyncMatchPath | null;
   data: InitialData;
 }
 
@@ -137,7 +146,7 @@ export interface DocumentgetInitialProps<T = RenderPageResult> {
   assets: Assets;
   data: ServerAppState;
   renderPage: () => Promise<T>;
-  match: PathMatch | null;
+  match: AsyncMatchPath | null;
   scripts: string[];
   styles: string[];
   scrollToTop: ScrollToTop;

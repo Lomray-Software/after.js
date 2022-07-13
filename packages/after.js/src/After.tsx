@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
+import EventManager from '@lomray/event-manager';
 import { Location } from 'history';
 import { loadInitialProps } from './loadInitialProps';
 import withRouter, {
@@ -15,11 +16,15 @@ import {
   AsyncRouteableComponent,
 } from './types';
 import { get404Component, getAllRoutes, isInstantTransition } from './utils';
+import renderRoutes from './renderRoutes';
+import StaticContext, { IStaticContext } from './staticContext';
+import Redirect from './Redirect';
 
 export interface AfterpartyProps
   extends RouteComponentProps<{ silent?: boolean }> {
   data: ServerAppState;
   routes: AsyncRouteProps[];
+  staticContext?: IStaticContext;
   transitionBehavior: TransitionBehavior;
 }
 
@@ -68,6 +73,12 @@ class Afterparty extends React.Component<AfterpartyProps, AfterpartyState> {
 
   componentDidUpdate(_prevProps: AfterpartyProps, prevState: AfterpartyState) {
     const navigated = prevState.currentLocation !== this.state.currentLocation;
+    const isLoadingChanged = prevState.isLoading !== this.state.isLoading;
+
+    if (isLoadingChanged) {
+      EventManager.publish('after:loading-changed', { isLoading: this.state.isLoading });
+    }
+
     if (navigated) {
       const {
         location,
@@ -83,7 +94,7 @@ class Afterparty extends React.Component<AfterpartyProps, AfterpartyState> {
 
       const { scrollToTop, ssg } = data.afterData;
       const isInstantMode: boolean = isInstantTransition(transitionBehavior);
-      const isBloackedMode = !isInstantMode;
+      const isBlockedMode = !isInstantMode;
 
       const ctx: CtxBase = {
         location,
@@ -112,8 +123,8 @@ class Afterparty extends React.Component<AfterpartyProps, AfterpartyState> {
           // for the previous page, we ignore data of the previous page
           if (this.state.currentLocation !== location) return;
 
-          // in blocked mode, first we fetch the data and then we scroll to top
-          if (isBloackedMode && isAllowedToScroll) {
+          // in blocked mode, first we fetch the data, and then we scroll to top
+          if (isBlockedMode && isAllowedToScroll) {
             window.scrollTo(0, 0);
           }
 
@@ -122,7 +133,7 @@ class Afterparty extends React.Component<AfterpartyProps, AfterpartyState> {
         .catch((e: Error) => {
           // @todo we should more cleverly handle errors???
           console.log(e);
-        });
+        })
     }
   }
 
@@ -147,8 +158,8 @@ class Afterparty extends React.Component<AfterpartyProps, AfterpartyState> {
   };
 
   render() {
-    const { previousLocation, data, isLoading } = this.state;
-    const { location: currentLocation, transitionBehavior } = this.props;
+    const { previousLocation, data } = this.state;
+    const { location: currentLocation, transitionBehavior, staticContext } = this.props;
     const initialData = this.prefetcherCache[currentLocation.pathname] || data;
 
     const instantMode = isInstantTransition(transitionBehavior);
@@ -159,25 +170,22 @@ class Afterparty extends React.Component<AfterpartyProps, AfterpartyState> {
       ? currentLocation
       : previousLocation || currentLocation;
 
+    let element;
+
+    if (initialData?.statusCode === 404) {
+      element = <Route element={this.NotfoundComponent} path={location.pathname} />;
+    } else if (initialData?.redirectTo) {
+      element = <Route element={<Redirect to={initialData.redirectTo} />} path='*' />;
+    } else {
+      element = renderRoutes({ routes: getAllRoutes(this.props.routes), routeProps: { ...initialData, location, prefetch: this.prefetch } });
+    }
+
     return (
-      <Routes location={location}>
-        {initialData?.statusCode === 404 && (
-          <Route element={this.NotfoundComponent} path={location.pathname} />
-        )}
-        {initialData?.redirectTo && <Navigate to={initialData.redirectTo} />}
-        {getAllRoutes(this.props.routes).map(({ path, element }) => (
-          <Route
-            key={`route--${path}`}
-            path={path}
-            element={React.createElement(element as React.FC, {
-              ...initialData,
-              prefetch: this.prefetch,
-              location,
-              isLoading,
-            })}
-          />
-        ))}
-      </Routes>
+      <StaticContext.Provider value={staticContext || {}}>
+        <Routes location={location}>
+          {element}
+        </Routes>
+      </StaticContext.Provider>
     );
   }
 }

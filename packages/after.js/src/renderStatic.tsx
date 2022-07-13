@@ -1,5 +1,5 @@
 import { renderApp } from './renderApp';
-import { AfterRenderStaticOptions, RenderResult } from './types';
+import type { AfterRenderStaticOptions, RenderResult } from './types';
 
 type TRenderStatic = <T extends any>(
   params: AfterRenderStaticOptions<T>

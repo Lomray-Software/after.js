@@ -12,6 +12,8 @@ let asyncComponentImportNames = [];
 const validImportSources = [
   '@jaredpalmer/after',
   '@jaredpalmer/after/asyncComponent',
+  '@lomray/after',
+  '@lomray/after/asyncComponent',
 ];
 
 export default function({ types: t }) {
@@ -40,7 +42,7 @@ export default function({ types: t }) {
         // if there was no import statement just return
         if (asyncComponentImportNames.length === 0) return;
 
-        // check for "component" in object properties and function call in value { element: hello() }
+        // check for "element" in object properties and function call in value { element: hello() }
         const component = path.node.properties.find(
           property =>
             t.isIdentifier(property.key, { name: 'element' }) &&

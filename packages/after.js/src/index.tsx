@@ -9,5 +9,6 @@ export * from './getAssets';
 export * from './renderApp';
 export * from './render';
 export * from './renderStatic';
+export { default as Redirect } from './Redirect';
 export { default as StaticContext, IStaticContext } from './staticContext';
 export { default as withRouter, RouteComponentProps } from './withRouter';

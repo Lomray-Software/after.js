@@ -1,9 +1,8 @@
 import {
-  NavigateFunction,
   useLocation,
   useNavigate,
-  Location,
 } from 'react-router-dom';
+import type { Location, NavigateFunction } from 'react-router-dom';
 import React from 'react';
 
 export interface RouteComponentProps<TLocation = unknown> {
