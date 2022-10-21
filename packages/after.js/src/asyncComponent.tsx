@@ -7,25 +7,27 @@ import {
   CtxStatic,
 } from './types';
 
+export type TAsyncComponent = <Props>(params: {
+  loader: () => Promise<Module<React.ComponentType<Props>>>;
+  Placeholder?: React.ComponentType<Props>;
+  chunkName?: string;
+}) => React.ReactNode;
+
 /**
  * Returns a new React component, ready to be instantiated.
  * Note the closure here protecting Component, and providing a unique
  * instance of Component to the static implementation of `load`.
  */
-export function asyncComponent<Props>({
+const asyncComponent: TAsyncComponent = ({
   loader,
   Placeholder,
   chunkName,
-}: {
-  loader: () => Promise<Module<React.ComponentType<Props>>>;
-  Placeholder?: React.ComponentType<Props>;
-  chunkName?: string;
-}) {
+}) => {
   // keep Component in a closure to avoid doing this stuff more than once
-  let Component: AsyncRouteComponentType<Props> | null = null;
+  let Component: AsyncRouteComponentType<never> | null = null;
 
   return class AsyncRouteComponent extends React.Component<
-    Props,
+    never,
     AsyncRouteComponentState
   > {
     static displayName = `AsyncRoute(unknown)`;
@@ -98,3 +100,5 @@ export function asyncComponent<Props>({
     }
   };
 }
+
+export { asyncComponent };
